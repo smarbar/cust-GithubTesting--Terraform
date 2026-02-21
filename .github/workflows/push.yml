@@ -104,6 +104,22 @@ jobs:
       continue-on-error: true
       working-directory: terraform/environments/${{ matrix.environment }}
 
+    - name: Scan Terraform  
+      uses: aquasecurity/trivy-action@0.30.0
+      with: 
+        scan-type: 'fs' 
+        scan-ref: '.'  # Path to your Terraform files  
+        # format: 'sarif'
+        scanners: 'vuln,secret,misconfig'
+        severity: 'CRITICAL,HIGH,MEDIUM,LOW,UNKNOWN' 
+        exit-code: 0
+        # output: 'trivy-terraform-results.sarif' 
+
+    # - name: Upload Trivy scan results to GitHub Security tab
+    #   uses: github/codeql-action/upload-sarif@v3
+    #   with:
+    #       sarif_file: 'trivy-terraform-results.sarif'
+    
     # - name: Security Scan - TFSec
     #   run: tfsec .
     #   continue-on-error: true
