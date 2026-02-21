@@ -101,7 +101,7 @@ jobs:
         framework: terraform
         # This will add both a CLI output to the console and create a results.sarif file
         output_format: cli,sarif
-        output_file_path: console,results.sarif
+        output_file_path: console,checkov-terraform-results.sarif
       
     # - name: Upload Checkov SARIF file
     #   uses: github/codeql-action/upload-sarif@v2
@@ -113,7 +113,7 @@ jobs:
     #   # Or 'soft_fail: true' to checkov.
     #   if: success() || failure()
     #   with:
-    #     sarif_file: results.sarif
+    #     sarif_file: checkov-terraform-results.sarif
 
     # - name: Security Scan - Checkov
     #   run: checkov -d . --framework terraform --output cli --skip-check CKV_AZURE_50
