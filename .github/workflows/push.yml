@@ -107,7 +107,7 @@ jobs:
       
     - name: Upload Checkov SARIF file
       uses: github/codeql-action/upload-sarif@v4
-      
+      continue-on-error: true
       # Results are generated only on a success or failure
       # this is required since GitHub by default won't run the next step
       # when the previous one has failed. Security checks that do not pass will 'fail'.
@@ -136,6 +136,7 @@ jobs:
     # Only available for org with CodeQL Advanced Security
     - name: Upload Trivy scan results to GitHub Security tab
       uses: github/codeql-action/upload-sarif@v4
+      continue-on-error: true
       with:
         sarif_file: 'trivy-terraform-results.sarif'
     
