@@ -1,0 +1,105 @@
+name: Push
+
+on:
+  push:
+    branches-ignore:
+      - main
+
+env:
+  TF_LOG: INFO
+  # TFLINT_LOG
+  ARM_CLIENT_ID: "${{ secrets.AZURE_CLIENT_ID }}"
+  ARM_SUBSCRIPTION_ID: "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+  ARM_TENANT_ID: "${{ secrets.AZURE_TENANT_ID }}"
+  TF_VERSION: "${{ secrets.TF_VERSION }}"
+
+permissions:
+      id-token: write
+      contents: read
+
+jobs: 
+  deploy-infra:
+    runs-on: ubuntu-latest
+    steps:
+    # Checkout the repository to the GitHub Actions runner
+    - name: Checkout
+      uses: actions/checkout@v6
+
+    # Install the latest version of Terraform CLI 
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: ${{ secrets.TF_VERSION }}
+      
+    # Log into Azure with OIDC integration
+    - name: 'Az CLI login'
+      uses: azure/login@v2
+      with:
+        client-id: ${{ secrets.AZURE_CLIENT_ID }}
+        tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+        subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+    # Run az commands to confirm sub access
+    - name: 'Run az commands'
+      run: |
+        az account show
+
+    # Run Terraform init
+    - name: Terraform Init
+      id: init
+      env:
+        STORAGE_ACCOUNT: ${{ secrets.STORAGE_ACCOUNT }}
+        CONTAINER_NAME: ${{ secrets.CONTAINER_NAME }}
+        RESOURCE_GROUP_NAME: ${{ secrets.RESOURCE_GROUP_NAME }}
+        # ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+        # ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        # ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      run: terraform init -backend-config="storage_account_name=$STORAGE_ACCOUNT" -backend-config="container_name=$CONTAINER_NAME" -backend-config="resource_group_name=$RESOURCE_GROUP_NAME"
+
+    - name: Terraform Validate
+      run: terraform validate
+      working-directory: terraform/environments/${{ matrix.environment }}
+
+    - name: Terraform Format Check
+      run: terraform fmt -check -recursive
+      working-directory: terraform/environments/${{ matrix.environment }}
+
+    # - name: Security Scan - Checkov
+    #   run: checkov -d . --framework terraform --output cli --skip-check CKV_AZURE_50
+    #   continue-on-error: true
+    #   working-directory: terraform/environments/${{ matrix.environment }}
+
+    # - name: Security Scan - TFSec
+    #   run: tfsec .
+    #   continue-on-error: true
+    #   working-directory: terraform/environments/${{ matrix.environment }}
+
+    # # Generates an execution plan for Terraform
+    # # An exit code of 0 indicated no changes, 1 a terraform failure, 2 there are pending changes.
+    # - name: Terraform Plan
+    #   id: plan
+    #   env:
+    #     ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+    #     ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+    #     ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+    #   run: |
+    #     export exitcode=0
+    #     terraform plan -detailed-exitcode -no-color -out tfplan || export exitcode=$?
+
+    #     echo "exitcode=$exitcode" >> $GITHUB_OUTPUT
+        
+    #     if [ $exitcode -eq 1 ]; then
+    #       echo Terraform Plan Failed!
+    #       exit 1
+    #     else 
+    #       exit 0
+    #     fi
+        
+    # # # Run a Terraform apply
+    # # - name: Terraform apply
+    # #   id: apply
+    # #   env:
+    # #     ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+    # #     ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+    # #     ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+    # #   run: terraform apply -auto-approve
