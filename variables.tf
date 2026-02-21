@@ -1,9 +1,3 @@
-variable "SUBSCRIPTION_ID" {
-  type        = string
-  description = "The subscription ID for the Azure resources"
-  default     = "52d833a0-2430-4b44-8d96-60ba7d2e8e4f"
-}
-
 variable "resource_groups" {
   description = "A map of resource group configurations."
   type = map(object({
