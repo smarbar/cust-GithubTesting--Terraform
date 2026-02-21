@@ -104,38 +104,21 @@ jobs:
       continue-on-error: true
       working-directory: terraform/environments/${{ matrix.environment }}
 
-    # - name: Scan Terraform  
-    #   uses: aquasecurity/trivy-action@0.34.1
-    #   with: 
-    #     scan-type: 'fs' 
-    #     scan-ref: '.'  # Path to your Terraform files  
-    #     format: 'sarif'
-    #     scanners: 'vuln,secret,misconfig'
-    #     severity: 'CRITICAL,HIGH,MEDIUM,LOW,UNKNOWN' 
-    #     exit-code: 0
-    #     output: 'trivy-terraform-results.sarif' 
-
-    # The first call to the action will invoke setup-trivy and install trivy
-    - name: Generate Trivy Vulnerability Report
-      uses: aquasecurity/trivy-action@master
-      with:
-        scan-type: "fs"
-        output: trivy-report.json
-        format: json
-        scan-ref: .
+    - name: Scan Terraform  
+      uses: aquasecurity/trivy-action@0.34.1
+      with: 
+        scan-type: 'fs' 
+        scan-ref: '.'  # Path to your Terraform files  
+        format: 'sarif'
+        scanners: 'vuln,secret,misconfig'
+        severity: 'CRITICAL,HIGH,MEDIUM,LOW,UNKNOWN' 
         exit-code: 0
+        output: 'trivy-terraform-results.sarif' 
 
-    # - name: Upload Trivy scan results to GitHub Security tab
-    #   uses: github/codeql-action/upload-sarif@v4
-    #   with:
-    #     sarif_file: 'trivy-terraform-results.sarif'
-
-    - name: Upload Vulnerability Scan Results
-      uses: actions/upload-artifact@v4
+    - name: Upload Trivy scan results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v4
       with:
-        name: trivy-report
-        path: trivy-report.json
-        retention-days: 30
+        sarif_file: 'trivy-terraform-results.sarif'
     
     # - name: Security Scan - TFSec
     #   run: tfsec .
