@@ -74,7 +74,7 @@ jobs:
     - name: Setup TFLint
       uses: terraform-linters/setup-tflint@v4
       with:
-        tflint_version: latest
+        tflint_version: 0.61.0
   
     - name: Show version
       run: tflint --version
@@ -82,27 +82,27 @@ jobs:
     - name: Init TFLint
       run: tflint --init
       env:
-          # https://github.com/terraform-linters/tflint/blob/master/docs/user-guide/plugins.md#avoiding-rate-limiting
+        # https://github.com/terraform-linters/tflint/blob/master/docs/user-guide/plugins.md#avoiding-rate-limiting
         GITHUB_TOKEN: ${{ github.token }}
 
     - name: Run TFLint
       run: tflint -f compact
     
-    # - name: Set up Python 3.9
-    #   uses: actions/setup-python@v6
-    #   with:
-    #     python-version: 3.9
-    # - name: Test with Checkov
-    #   id: checkov
-    #   uses: bridgecrewio/checkov-action@v12
-    #   with:
-    #     # directory: example/examplea # Optional
-    #     framework: terraform 
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v6
+      with:
+        python-version: 3.9
+    - name: Test with Checkov
+      id: checkov
+      uses: bridgecrewio/checkov-action@v12
+      with:
+        # directory: example/examplea # Optional
+        framework: terraform 
 
-    # - name: Security Scan - Checkov
-    #   run: checkov -d . --framework terraform --output cli --skip-check CKV_AZURE_50
-    #   continue-on-error: true
-    #   working-directory: terraform/environments/${{ matrix.environment }}
+    - name: Security Scan - Checkov
+      run: checkov -d . --framework terraform --output cli --skip-check CKV_AZURE_50
+      continue-on-error: true
+      working-directory: terraform/environments/${{ matrix.environment }}
 
     # - name: Security Scan - TFSec
     #   run: tfsec .
