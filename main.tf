@@ -5,6 +5,7 @@ resource "azurerm_resource_group" "rg" {
   tags     = local.tags
 }
 
+#test
 resource "azurerm_virtual_network" "vnets" {
   for_each            = var.virtual_networks
   name                = each.value.name
