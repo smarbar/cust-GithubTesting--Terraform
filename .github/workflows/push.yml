@@ -58,11 +58,11 @@ jobs:
 
     - name: Terraform Validate
       run: terraform validate
-      working-directory: terraform/environments/${{ matrix.environment }}
+      # working-directory: terraform/environments/${{ matrix.environment }}
 
     - name: Terraform Format Check
       run: terraform fmt -check -recursive
-      working-directory: terraform/environments/${{ matrix.environment }}
+      # working-directory: terraform/environments/${{ matrix.environment }}
 
     # - name: Security Scan - Checkov
     #   run: checkov -d . --framework terraform --output cli --skip-check CKV_AZURE_50
