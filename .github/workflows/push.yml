@@ -14,8 +14,10 @@ env:
   TF_VERSION: "${{ secrets.TF_VERSION }}"
 
 permissions:
-      id-token: write
-      contents: read
+  id-token: write
+  contents: read
+  security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
+  actions: read # only required for a private repository by github/codeql-action/upload-sarif to get the Action run status
 
 jobs: 
   deploy-infra:
@@ -103,17 +105,17 @@ jobs:
         output_format: cli,sarif
         output_file_path: console,checkov-terraform-results.sarif
       
-    # - name: Upload Checkov SARIF file
-    #   uses: github/codeql-action/upload-sarif@v2
+    - name: Upload Checkov SARIF file
+      uses: github/codeql-action/upload-sarif@v2
       
-    #   # Results are generated only on a success or failure
-    #   # this is required since GitHub by default won't run the next step
-    #   # when the previous one has failed. Security checks that do not pass will 'fail'.
-    #   # An alternative is to add `continue-on-error: true` to the previous step
-    #   # Or 'soft_fail: true' to checkov.
-    #   if: success() || failure()
-    #   with:
-    #     sarif_file: checkov-terraform-results.sarif
+      # Results are generated only on a success or failure
+      # this is required since GitHub by default won't run the next step
+      # when the previous one has failed. Security checks that do not pass will 'fail'.
+      # An alternative is to add `continue-on-error: true` to the previous step
+      # Or 'soft_fail: true' to checkov.
+      if: success() || failure()
+      with:
+        sarif_file: checkov-terraform-results.sarif
 
     # - name: Security Scan - Checkov
     #   run: checkov -d . --framework terraform --output cli --skip-check CKV_AZURE_50
@@ -131,11 +133,11 @@ jobs:
         exit-code: 0
         output: 'trivy-terraform-results.sarif' 
 
-    ## Only available for org with CodeQL Advanced Security
-    # - name: Upload Trivy scan results to GitHub Security tab
-    #   uses: github/codeql-action/upload-sarif@v4
-    #   with:
-    #     sarif_file: 'trivy-terraform-results.sarif'
+    # Only available for org with CodeQL Advanced Security
+    - name: Upload Trivy scan results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v4
+      with:
+        sarif_file: 'trivy-terraform-results.sarif'
     
     # - name: Security Scan - TFSec
     #   run: tfsec .
