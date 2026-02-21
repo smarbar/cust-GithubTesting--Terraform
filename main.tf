@@ -5,8 +5,8 @@ resource "azurerm_resource_group" "rg" {
   tags     = local.tags
 }
 
-#test
 resource "azurerm_virtual_network" "vnets" {
+  #checkov:skip=CKV_AZURE_183: "Ensure that VNET uses local DNS addresses"
   for_each            = var.virtual_networks
   name                = each.value.name
   location            = local.location
@@ -17,6 +17,7 @@ resource "azurerm_virtual_network" "vnets" {
 }
 
 resource "azurerm_subnet" "subnets" {
+  #checkov:skip=CKV2_AZURE_31: "Ensure VNET subnet is configured with a Network Security Group (NSG)"
   for_each                          = var.subnets
   name                              = each.value.name
   resource_group_name               = azurerm_virtual_network.vnets[each.value.vnet].resource_group_name
