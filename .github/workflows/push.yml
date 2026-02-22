@@ -3,14 +3,14 @@ name: Push
 on:
   push:
     branches-ignore:
-      - main
+    - main
 
 env:
   TF_LOG: INFO
   # TFLINT_LOG
-  ARM_CLIENT_ID: "${{ secrets.AZURE_CLIENT_ID }}"
-  ARM_SUBSCRIPTION_ID: "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
-  ARM_TENANT_ID: "${{ secrets.AZURE_TENANT_ID }}"
+  # ARM_CLIENT_ID: "${{ secrets.AZURE_CLIENT_ID }}"
+  # ARM_SUBSCRIPTION_ID: "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+  # ARM_TENANT_ID: "${{ secrets.AZURE_TENANT_ID }}"
   TF_VERSION: "${{ secrets.TF_VERSION }}"
 
 permissions:
@@ -48,11 +48,11 @@ jobs:
 
     # Run Terraform init
     - name: Terraform Init
-      id: init
-      env:
-        STORAGE_ACCOUNT: ${{ secrets.STORAGE_ACCOUNT }}
-        CONTAINER_NAME: ${{ secrets.CONTAINER_NAME }}
-        RESOURCE_GROUP_NAME: ${{ secrets.RESOURCE_GROUP_NAME }}
+      # id: init
+      # env:
+        # STORAGE_ACCOUNT: ${{ secrets.STORAGE_ACCOUNT }}
+        # CONTAINER_NAME: ${{ secrets.CONTAINER_NAME }}
+        # RESOURCE_GROUP_NAME: ${{ secrets.RESOURCE_GROUP_NAME }}
         # ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
         # ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
         # ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
@@ -68,7 +68,7 @@ jobs:
       # working-directory: terraform/environments/${{ matrix.environment }}
 
     - name: Cache plugin dir
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: ~/.tflint.d/plugins
         key: ${{ matrix.os }}-tflint-${{ hashFiles('.tflint.hcl') }}
@@ -83,9 +83,9 @@ jobs:
 
     - name: Init TFLint
       run: tflint --init
-      env:
+      # env:
         # https://github.com/terraform-linters/tflint/blob/master/docs/user-guide/plugins.md#avoiding-rate-limiting
-        GITHUB_TOKEN: ${{ github.token }}
+        # GITHUB_TOKEN: ${{ github.token }}
 
     - name: Run TFLint
       run: tflint -f compact
