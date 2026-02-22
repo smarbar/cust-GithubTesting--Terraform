@@ -11,7 +11,7 @@ terraform {
     # resource_group_name  = "rg"                    #resource group which is associated with the storage account
     # storage_account_name = "thisisatestsaacc"      #storage account name
     # container_name       = "tfstatefiles"          #container name
-    # key                  = "dev/terraform.tfstate" #path and file name 
+    key = "terraform.tfstate" #path and file name
   }
 }
 
