@@ -3,7 +3,7 @@ name: 'Terraform Configuration Drift Detection'
 on:
   workflow_dispatch: 
   schedule:
-    - cron: '41 3 * * *' # runs nightly at 3:41 am
+    - cron: '41 20 * * *' # runs nightly at 8:41 pm
 
 #Special permissions required for OIDC authentication
 permissions:
@@ -13,7 +13,7 @@ permissions:
 
 #These environment variables are used by the terraform azure provider to setup OIDD authenticate. 
 env:
-  ARM_CLIENT_ID: "${{ secrets.AZURE_CLIENT_ID }}"
+  ARM_CLIENT_ID: "${{ secrets.AZURE_CLIENT_ID_APPLY }}"
   ARM_SUBSCRIPTION_ID: "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
   ARM_TENANT_ID: "${{ secrets.AZURE_TENANT_ID }}"
   TF_VERSION: "${{ secrets.TF_VERSION }}"
@@ -31,7 +31,7 @@ jobs:
     steps:
     # Checkout the repository to the GitHub Actions runner
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
 
     # Install the latest version of the Terraform CLI
     - name: Setup Terraform
@@ -40,14 +40,38 @@ jobs:
         terraform_version: ${{ secrets.TF_VERSION }}
         terraform_wrapper: false
 
-    # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
+    # Log into Azure with OIDC integration
+    - name: 'Az CLI login'
+      uses: azure/login@v2
+      with:
+        client-id: ${{ secrets.AZURE_CLIENT_ID_APPLY}}
+        tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+        subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+    # Run az commands to confirm sub access
+    - name: 'Run az commands'
+      run: |
+        az account show
+
+    # Run Terraform init
     - name: Terraform Init
-      run: terraform init
+      env:
+        STORAGE_ACCOUNT: ${{ secrets.STORAGE_ACCOUNT }}
+        CONTAINER_NAME: ${{ secrets.CONTAINER_NAME }}
+        RESOURCE_GROUP_NAME: ${{ secrets.RESOURCE_GROUP_NAME }}
+        ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID_APPLY}}
+        ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      run: terraform init -backend-config="storage_account_name=$STORAGE_ACCOUNT" -backend-config="container_name=$CONTAINER_NAME" -backend-config="resource_group_name=$RESOURCE_GROUP_NAME"
 
     # Generates an execution plan for Terraform
     # An exit code of 0 indicated no changes, 1 a terraform failure, 2 there are pending changes.
     - name: Terraform Plan
       id: tf-plan
+      env:
+        ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID_APPLY}}
+        ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       run: |
         export exitcode=0
         terraform plan -detailed-exitcode -no-color -out tfplan || export exitcode=$?
@@ -95,7 +119,7 @@ jobs:
     # If changes are detected, create a new issue
     - name: Publish Drift Report
       if: steps.tf-plan.outputs.exitcode == 2
-      uses: actions/github-script@v7
+      uses: actions/github-script@v8
       env:
         SUMMARY: "${{ steps.tf-plan-string.outputs.summary }}"
       with:
@@ -143,7 +167,7 @@ jobs:
     # If changes aren't detected, close any open drift issues
     - name: Publish Drift Report
       if: steps.tf-plan.outputs.exitcode == 0
-      uses: actions/github-script@v7
+      uses: actions/github-script@v8
       with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
