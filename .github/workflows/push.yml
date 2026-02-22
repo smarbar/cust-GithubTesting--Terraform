@@ -8,9 +8,6 @@ on:
 env:
   TF_LOG: INFO
   # TFLINT_LOG
-  # ARM_CLIENT_ID: "${{ secrets.AZURE_CLIENT_ID }}"
-  # ARM_SUBSCRIPTION_ID: "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
-  # ARM_TENANT_ID: "${{ secrets.AZURE_TENANT_ID }}"
   TF_VERSION: "${{ secrets.TF_VERSION }}"
 
 permissions:
@@ -19,7 +16,7 @@ permissions:
   security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
   actions: read # only required for a private repository by github/codeql-action/upload-sarif to get the Action run status
 
-jobs: 
+jobs:
   deploy-infra:
     runs-on: ubuntu-latest
     steps:
@@ -27,52 +24,29 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v6
 
-    # Install the latest version of Terraform CLI 
+    # Install the latest version of Terraform CLI
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v3
       with:
         terraform_version: ${{ secrets.TF_VERSION }}
-      
-    # # Log into Azure with OIDC integration
-    # - name: 'Az CLI login'
-    #   uses: azure/login@v2
-    #   with:
-    #     client-id: ${{ secrets.AZURE_CLIENT_ID }}
-    #     tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-    #     subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
-    # # Run az commands to confirm sub access
-    # - name: 'Run az commands'
-    #   run: |
-    #     az account show
 
     # Run Terraform init
     - name: Terraform Init
-      # id: init
-      # env:
-        # STORAGE_ACCOUNT: ${{ secrets.STORAGE_ACCOUNT }}
-        # CONTAINER_NAME: ${{ secrets.CONTAINER_NAME }}
-        # RESOURCE_GROUP_NAME: ${{ secrets.RESOURCE_GROUP_NAME }}
-        # ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-        # ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-        # ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       run: terraform init -backend=false
       # run: terraform init -backend-config="storage_account_name=$STORAGE_ACCOUNT" -backend-config="container_name=$CONTAINER_NAME" -backend-config="resource_group_name=$RESOURCE_GROUP_NAME"
-
-    - name: Terraform Validate
-      run: terraform validate
-      # working-directory: terraform/environments/${{ matrix.environment }}
-
+      
     - name: Terraform Format Check
       run: terraform fmt -check -recursive
-      # working-directory: terraform/environments/${{ matrix.environment }}
+
+    - name: Terraform Validate
+      run: terraform validate -no-color
 
     - name: Cache plugin dir
       uses: actions/cache@v5
       with:
         path: ~/.tflint.d/plugins
         key: ${{ matrix.os }}-tflint-${{ hashFiles('.tflint.hcl') }}
-      
+
     - name: Setup TFLint
       uses: terraform-linters/setup-tflint@v4
       with:
@@ -89,12 +63,12 @@ jobs:
 
     - name: Run TFLint
       run: tflint -f compact
-    
+
     - name: Set up Python 3.9
       uses: actions/setup-python@v6
       with:
         python-version: 3.9
-    
+
     - name: Security Scan - Checkov
       id: checkov
       uses: bridgecrewio/checkov-action@v12
@@ -104,7 +78,7 @@ jobs:
         # This will add both a CLI output to the console and create a results.sarif file
         output_format: cli,sarif
         output_file_path: console,checkov-terraform-results.sarif
-      
+
     - name: Upload Checkov SARIF file
       uses: github/codeql-action/upload-sarif@v4
       continue-on-error: true
@@ -122,16 +96,16 @@ jobs:
     #   continue-on-error: true
     #   working-directory: terraform/environments/${{ matrix.environment }}
 
-    - name: Scan Terraform  
+    - name: Scan Terraform
       uses: aquasecurity/trivy-action@0.34.1
-      with: 
-        scan-type: 'fs' 
-        scan-ref: '.'  # Path to your Terraform files  
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'  # Path to your Terraform files
         format: 'sarif'
         scanners: 'vuln,secret,misconfig'
-        severity: 'CRITICAL,HIGH,MEDIUM,LOW,UNKNOWN' 
+        severity: 'CRITICAL,HIGH,MEDIUM,LOW,UNKNOWN'
         exit-code: 0
-        output: 'trivy-terraform-results.sarif' 
+        output: 'trivy-terraform-results.sarif'
 
     # Only available for org with CodeQL Advanced Security
     - name: Upload Trivy scan results to GitHub Security tab
@@ -139,38 +113,3 @@ jobs:
       continue-on-error: true
       with:
         sarif_file: 'trivy-terraform-results.sarif'
-    
-    # - name: Security Scan - TFSec
-    #   run: tfsec .
-    #   continue-on-error: true
-    #   working-directory: terraform/environments/${{ matrix.environment }}
-
-    # # Generates an execution plan for Terraform
-    # # An exit code of 0 indicated no changes, 1 a terraform failure, 2 there are pending changes.
-    # - name: Terraform Plan
-    #   id: plan
-    #   env:
-    #     ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-    #     ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-    #     ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-    #   run: |
-    #     export exitcode=0
-    #     terraform plan -detailed-exitcode -no-color -out tfplan || export exitcode=$?
-
-    #     echo "exitcode=$exitcode" >> $GITHUB_OUTPUT
-        
-    #     if [ $exitcode -eq 1 ]; then
-    #       echo Terraform Plan Failed!
-    #       exit 1
-    #     else 
-    #       exit 0
-    #     fi
-        
-    # # # Run a Terraform apply
-    # # - name: Terraform apply
-    # #   id: apply
-    # #   env:
-    # #     ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-    # #     ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-    # #     ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-    # #   run: terraform apply -auto-approve
