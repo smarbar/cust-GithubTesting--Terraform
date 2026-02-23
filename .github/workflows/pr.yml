@@ -43,16 +43,16 @@ jobs:
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v3
       with:
-        terraform_version: ${{ vars.TF_VERSION }}
+        terraform_version: $TF_VERSION
         terraform_wrapper: false
       
     # Log into Azure with OIDC integration
     - name: 'Az CLI login'
       uses: azure/login@v2
       with:
-        client-id: ${{ secrets.AZURE_CLIENT_ID }}
-        tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-        subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        client-id: $ARM_CLIENT_ID
+        tenant-id: $ARM_TENANT_ID
+        subscription-id: $ARM_SUBSCRIPTION_ID
 
     # Run az commands to confirm sub access
     - name: 'Run az commands'
@@ -65,9 +65,9 @@ jobs:
         STORAGE_ACCOUNT: ${{ secrets.STORAGE_ACCOUNT }}
         CONTAINER_NAME: ${{ secrets.CONTAINER_NAME }}
         RESOURCE_GROUP_NAME: ${{ secrets.RESOURCE_GROUP_NAME }}
-        ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-        ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-        ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+        # ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+        # ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        # ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       run: terraform init -backend-config="storage_account_name=$STORAGE_ACCOUNT" -backend-config="container_name=$CONTAINER_NAME" -backend-config="resource_group_name=$RESOURCE_GROUP_NAME"
 
     # Run a Terraform fmt
@@ -77,20 +77,20 @@ jobs:
 
     # Run a Terraform validate
     - name: Terraform validate
-      env:
-        ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-        ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-        ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      # env:
+      #   ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      #   ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      #   ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       run: terraform validate -no-color
 
     # Generates an execution plan for Terraform
     # An exit code of 0 indicated no changes, 1 a terraform failure, 2 there are pending changes.
     - name: Terraform Plan
       id: plan
-      env:
-        ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-        ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-        ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      # env:
+      #   ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      #   ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      #   ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       run: |
         export exitcode=0
         terraform plan -detailed-exitcode -no-color -out tfplan || export exitcode=$?
