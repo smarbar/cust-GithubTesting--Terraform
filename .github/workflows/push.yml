@@ -14,7 +14,7 @@ on:
 env:
   TF_LOG: INFO
   # TFLINT_LOG
-  TF_VERSION: "${{ secrets.TF_VERSION }}"
+  TF_VERSION: "${{ vars.TF_VERSION }}"
 
 permissions:
   id-token: write
@@ -34,7 +34,7 @@ jobs:
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v3
       with:
-        terraform_version: ${{ secrets.TF_VERSION }}
+        terraform_version: ${{ vars.TF_VERSION }}
 
     # Run Terraform init
     - name: Terraform Init
