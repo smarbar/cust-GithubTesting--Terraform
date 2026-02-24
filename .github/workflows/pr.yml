@@ -22,11 +22,11 @@ env:
   TF_VERSION: "${{ vars.TF_VERSION }}"
 
 permissions:
-      id-token: write
-      contents: read
-      security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
-      issues: write
-      pull-requests: write
+  id-token: write
+  contents: read
+  security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
+  issues: write
+  pull-requests: write
 
 jobs: 
   terraform-plan:
