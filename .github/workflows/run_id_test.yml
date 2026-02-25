@@ -11,7 +11,7 @@ jobs:
       - name: Get run ID of "Pull Request" workflow
         id: get-run-id
         run: |
-          OTHER_REPO=smarbar/cust-GithubTesting--Terraform"
+          OTHER_REPO="smarbar/cust-GithubTesting--Terraform"
           WF_NAME="Pull Request"
           RUN_ID=`gh run --repo ${OTHER_REPO} list --workflow ${WF_NAME} --json databaseId --jq .[0].databaseId`
           echo "Detected latest run id of ${RUN_ID} for workflow ${WF_NAME}"
