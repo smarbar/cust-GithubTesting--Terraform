@@ -1,5 +1,4 @@
 resource "azurerm_resource_group" "rg" {
-  # test push
   for_each = var.resource_groups
   name     = each.value.name
   location = local.location
