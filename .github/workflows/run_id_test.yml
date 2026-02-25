@@ -18,8 +18,8 @@ jobs:
         run: |
           OTHER_REPO="smarbar/cust-GithubTesting--Terraform"
           WF_NAME="Pull Request"
-          #RUN_ID=`gh run --repo ${OTHER_REPO} list --workflow "${WF_NAME}" --json databaseId --jq .[0].databaseId`
-          gh run list --repo smarbar/cust-GithubTesting--Terraform --workflow "Pull Request" --json databaseId --jq .[0].databaseId
+          RUN_ID=`gh run list --repo ${OTHER_REPO} --workflow "${WF_NAME}" --json databaseId --jq .[0].databaseId`
+          #gh run list --repo smarbar/cust-GithubTesting--Terraform --workflow "Pull Request" --json databaseId --jq .[0].databaseId
           echo "Detected latest run id of ${RUN_ID} for workflow ${WF_NAME}"
           echo "run-id=${RUN_ID}" >> "$GITHUB_OUTPUT"
         env:
