@@ -9,7 +9,7 @@ virtual_networks = {
     name           = "TDR-DS-Hub-VNet"
     resource_group = "hub"
     address_space  = ["10.100.0.0/20"]
-    dns_servers    = ["10.100.0.5"]
+    dns_servers    = ["10.100.0.6"]
   }
 }
 
