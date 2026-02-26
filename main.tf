@@ -1,5 +1,5 @@
 resource "azurerm_resource_group" "rg" {
-  #sec test
+  #sec test 2
   for_each = var.resource_groups
   name     = each.value.name
   location = local.location
