@@ -20,6 +20,7 @@ env:
   CONTAINER_NAME: ${{ secrets.CONTAINER_NAME }}
   RESOURCE_GROUP_NAME: ${{ secrets.RESOURCE_GROUP_NAME }}
   TF_VERSION: "${{ vars.TF_VERSION }}"
+  TF_PLAN_NAME: ${{ vars.TF_PLAN_NAME }}
 
 permissions:
   id-token: write
@@ -81,7 +82,7 @@ jobs:
       id: plan
       run: |
         export exitcode=0
-        terraform plan -detailed-exitcode -no-color -out tfplan || export exitcode=$?
+        terraform plan -detailed-exitcode -no-color -out $TF_PLAN_NAME || export exitcode=$?
 
         echo "exitcode=$exitcode" >> $GITHUB_OUTPUT
         
@@ -96,14 +97,14 @@ jobs:
     - name: Publish Terraform Plan
       uses: actions/upload-artifact@v6
       with:
-        name: tfplan
-        path: tfplan
+        name: $TF_PLAN_NAME
+        path: $TF_PLAN_NAME
     
       # Create string output of Terraform Plan
     - name: Create String Output
       id: tf-plan-string
       run: |
-        TERRAFORM_PLAN=$(terraform show -no-color tfplan)
+        TERRAFORM_PLAN=$(terraform show -no-color $TF_PLAN_NAME)
         
         delimiter="$(openssl rand -hex 8)"
         echo "summary<<${delimiter}" >> $GITHUB_OUTPUT
