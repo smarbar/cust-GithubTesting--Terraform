@@ -28,9 +28,110 @@ permissions:
   security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
   issues: write
   pull-requests: write
+  actions: read # only required for a private repository by github/codeql-action/upload-sarif to get the Action run status
 
 jobs: 
+  code-checks:
+    runs-on: ubuntu-latest
+    steps:
+    # Checkout the repository to the GitHub Actions runner
+    - name: Checkout
+      uses: actions/checkout@v6
+
+    # Install the latest version of Terraform CLI
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: $TF_VERSION
+
+    # Run Terraform init
+    - name: Terraform Init
+      run: terraform init -backend=false
+      
+    - name: Terraform Format Check
+      run: terraform fmt -check -recursive
+
+    - name: Terraform Validate
+      run: terraform validate -no-color
+
+    - name: Cache plugin dir
+      uses: actions/cache@v5
+      with:
+        path: ~/.tflint.d/plugins
+        key: tflint-${{ hashFiles('.tflint.hcl') }}
+
+    - name: Setup TFLint
+      uses: terraform-linters/setup-tflint@v4
+      with:
+        tflint_version: latest
+  
+    - name: Show version
+      run: tflint --version
+
+    - name: Init TFLint
+      run: tflint --init
+
+    - name: Run TFLint
+      run: tflint -f compact
+
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v6
+      with:
+        python-version: 3.9
+
+    - name: Security Scan - Checkov
+      id: checkov
+      # continue-on-error: true
+      uses: bridgecrewio/checkov-action@v12
+      if: success() || failure()
+      with:
+        framework: terraform
+        # This will add both a CLI output to the console and create a results.sarif file
+        output_format: cli,sarif
+        output_file_path: console,checkov-terraform-results.sarif
+
+    - name: Upload Checkov SARIF file
+      uses: github/codeql-action/upload-sarif@v4
+      # continue-on-error: true
+      # Results are generated only on a success or failure
+      # this is required since GitHub by default won't run the next step
+      # when the previous one has failed. Security checks that do not pass will 'fail'.
+      # An alternative is to add `continue-on-error: true` to the previous step
+      # Or 'soft_fail: true' to checkov.
+      if: success() || failure()
+      with:
+        sarif_file: checkov-terraform-results.sarif
+        category: checkov
+
+    # - name: Security Scan - Checkov
+    #   run: checkov -d . --framework terraform --output cli --skip-check CKV_AZURE_50
+    #   continue-on-error: true
+    #   working-directory: terraform/environments/${{ matrix.environment }}
+
+    - name: Scan Terraform
+      uses: aquasecurity/trivy-action@0.34.1
+      if: success() || failure()
+      # continue-on-error: true
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'  # Path to your Terraform files
+        format: 'sarif'
+        scanners: 'vuln,secret,misconfig'
+        severity: 'CRITICAL,HIGH,MEDIUM,LOW,UNKNOWN'
+        exit-code: 0
+        output: 'trivy-terraform-results.sarif'
+
+    # Only available for org with CodeQL Advanced Security
+    - name: Upload Trivy scan results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v4
+      if: success() || failure()
+      # continue-on-error: true
+      with:
+        sarif_file: 'trivy-terraform-results.sarif'
+        category: trivy
+
   terraform-plan:
+    needs: code-checks
     runs-on: ubuntu-latest
     env:
       #this is needed since we are running terraform with read-only permissions
