@@ -18,31 +18,34 @@ permissions:
   contents: read
 
 jobs:
-  build:
+  trivy-scan:
     permissions:
       contents: read # for actions/checkout to fetch code
       security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
       actions: read # only required for a private repository by github/codeql-action/upload-sarif to get the Action run status
-    name: Build
+    name: Trivy Scan
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Build an image from Dockerfile
-        run: |
-          docker build -t docker.io/my-organization/my-app:${{ github.sha }} .
-
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@7b7aa264d83dc58691451798b4d117d53d21edfe
+      - name: Scan Terraform
+        uses: aquasecurity/trivy-action@0.34.1
+        # continue-on-error: true
         with:
-          image-ref: 'docker.io/my-organization/my-app:${{ github.sha }}'
-          format: 'template'
-          template: '@/contrib/sarif.tpl'
-          output: 'trivy-results.sarif'
-          severity: 'CRITICAL,HIGH'
+          scan-type: 'fs'
+          scan-ref: '.'  # Path to your Terraform files
+          format: 'sarif'
+          scanners: 'vuln,secret,misconfig'
+          severity: 'CRITICAL,HIGH,MEDIUM,LOW,UNKNOWN'
+          exit-code: 0
+          output: 'trivy-terraform-results.sarif'
 
+      # Only available for org with CodeQL Advanced Security
       - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
+        if: success() || failure()
+        # continue-on-error: true
         with:
-          sarif_file: 'trivy-results.sarif'
+          sarif_file: 'trivy-terraform-results.sarif'
+          category: trivy
