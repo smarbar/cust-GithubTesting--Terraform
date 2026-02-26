@@ -90,7 +90,7 @@ jobs:
       # if: success() || failure()
       with:
         sarif_file: checkov-terraform-results.sarif
-        category: 'Checkov Terraform Scan'
+        category: checkov
 
     # - name: Security Scan - Checkov
     #   run: checkov -d . --framework terraform --output cli --skip-check CKV_AZURE_50
@@ -114,4 +114,4 @@ jobs:
       continue-on-error: true
       with:
         sarif_file: 'trivy-terraform-results.sarif'
-        category: 'Trivy Terraform Scan'
+        category: trivy
