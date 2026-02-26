@@ -43,3 +43,11 @@ resource "azurerm_subnet" "subnets" {
     }
   }
 }
+
+resource "azurerm_network_security_group" "nsg" {
+  for_each            = var.subnets
+  name                = each.value.name
+  location            = local.location
+  resource_group_name = azurerm_resource_group.rg[each.value.resource_group].name
+  tags                = local.tags
+}
