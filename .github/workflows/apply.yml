@@ -56,7 +56,7 @@ jobs:
     - name: Download artifact from "Pull Request" workflow
       uses: actions/download-artifact@v6
       with:
-        name: $TF_PLAN_NAME # Match name used in test.yml upload artifact step
+        name: ${{ vars.TF_PLAN_NAME }} # Match name used in test.yml upload artifact step
         github-token: ${{ secrets.GITHUB_TOKEN }}
         repository: ${{ github.repository }}
         run-id: ${{ steps.get-run-id.outputs.run-id }}
@@ -87,4 +87,4 @@ jobs:
 
     # Terraform Apply
     - name: Terraform Apply
-      run: terraform apply -auto-approve $TF_PLAN_NAME
+      run: terraform apply -auto-approve ${{ vars.TF_PLAN_NAME }}
