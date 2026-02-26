@@ -72,6 +72,7 @@ jobs:
 
     - name: Security Scan - Checkov
       id: checkov
+      continue-on-error: true
       uses: bridgecrewio/checkov-action@v12
       with:
         framework: terraform
@@ -87,7 +88,7 @@ jobs:
       # when the previous one has failed. Security checks that do not pass will 'fail'.
       # An alternative is to add `continue-on-error: true` to the previous step
       # Or 'soft_fail: true' to checkov.
-      # if: success() || failure()
+      #if: success() || failure()
       with:
         sarif_file: checkov-terraform-results.sarif
         category: checkov
@@ -99,6 +100,8 @@ jobs:
 
     - name: Scan Terraform
       uses: aquasecurity/trivy-action@0.34.1
+      #if: success() || failure()
+      continue-on-error: true
       with:
         scan-type: 'fs'
         scan-ref: '.'  # Path to your Terraform files
@@ -111,6 +114,7 @@ jobs:
     # Only available for org with CodeQL Advanced Security
     - name: Upload Trivy scan results to GitHub Security tab
       uses: github/codeql-action/upload-sarif@v4
+      #if: success() || failure()
       continue-on-error: true
       with:
         sarif_file: 'trivy-terraform-results.sarif'
