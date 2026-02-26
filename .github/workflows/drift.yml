@@ -67,7 +67,7 @@ jobs:
       id: tf-plan
       run: |
         export exitcode=0
-        terraform plan -detailed-exitcode -no-color -out $TF_PLAN_NAME || export exitcode=$?
+        terraform plan -detailed-exitcode -no-color -out ${{ vars.TF_PLAN_NAME }} || export exitcode=$?
         
         echo "exitcode=$exitcode" >> $GITHUB_OUTPUT
         
@@ -82,14 +82,14 @@ jobs:
     - name: Publish Terraform Plan
       uses: actions/upload-artifact@v4
       with:
-        name: $TF_PLAN_NAME
-        path: $TF_PLAN_NAME
+        name: ${{ vars.TF_PLAN_NAME }}
+        path: ${{ vars.TF_PLAN_NAME }}
         
     # Create string output of Terraform Plan
     - name: Create String Output
       id: tf-plan-string
       run: |
-        TERRAFORM_PLAN=$(terraform show -no-color $TF_PLAN_NAME)
+        TERRAFORM_PLAN=$(terraform show -no-color ${{ vars.TF_PLAN_NAME }})
         
         delimiter="$(openssl rand -hex 8)"
         echo "summary<<${delimiter}" >> $GITHUB_OUTPUT
