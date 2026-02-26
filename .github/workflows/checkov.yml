@@ -47,6 +47,7 @@ jobs:
         
       
       - name: Remove suppressed (checkov:skip) results from SARIF
+        if: success() || failure()
         run: |
           chmod +x ./filter-suppressed-sarif.sh
           ./filter-suppressed-sarif.sh checkov-terraform-results.sarif checkov-terraform-results-filtered.sarif
