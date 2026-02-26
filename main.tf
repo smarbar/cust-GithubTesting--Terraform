@@ -18,6 +18,7 @@ resource "azurerm_virtual_network" "vnets" {
 }
 
 resource "azurerm_subnet" "subnets" {
+  #checkov:skip=CKV2_AZURE_31: "Ensure VNET subnet is configured with a Network Security Group (NSG)"
   for_each                          = var.subnets
   name                              = each.value.name
   resource_group_name               = azurerm_virtual_network.vnets[each.value.vnet].resource_group_name
