@@ -1,5 +1,5 @@
 resource "azurerm_resource_group" "rg" {
-  #sec test 16
+  #sec test 15
   for_each = var.resource_groups
   name     = each.value.name
   location = local.location
@@ -7,6 +7,7 @@ resource "azurerm_resource_group" "rg" {
 }
 
 resource "azurerm_virtual_network" "vnets" {
+  #checkov:skip=CKV_AZURE_183: "Ensure that VNET uses local DNS addresses"
   for_each            = var.virtual_networks
   name                = each.value.name
   location            = local.location
