@@ -3,12 +3,12 @@ name: Pull Request
 on:
   pull_request:
     branches:
-    - main
+      - main
     paths-ignore:
-    - '**/.github/workflows/**'
-    - '**/.devcontainer/**'
-    - '**/*.md'
-    - .gitignore
+      - '**/.github/workflows/**'
+      - '**/.devcontainer/**'
+      - '**/*.md'
+      - .gitignore
 
 env:
   TF_LOG: INFO
